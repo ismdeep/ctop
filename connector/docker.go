@@ -6,8 +6,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/op/go-logging"
 	"github.com/hako/durafmt"
+	"github.com/op/go-logging"
 
 	"github.com/bcicen/ctop/connector/collector"
 	"github.com/bcicen/ctop/connector/manager"
@@ -209,11 +209,15 @@ func (cm *Docker) inspect(id string) (insp *api.Container, found bool, failed bo
 }
 
 func calcUptime(insp *api.Container) string {
-	endTime := insp.State.FinishedAt
-	if endTime.IsZero() || insp.State.Running {
-		endTime = time.Now()
+	if insp == nil || !insp.State.Running || insp.State.StartedAt.IsZero() {
+		return "-"
 	}
-	uptime := endTime.Sub(insp.State.StartedAt)
+
+	uptime := time.Since(insp.State.StartedAt)
+	if uptime < 0 {
+		return "-"
+	}
+
 	return durafmt.Parse(uptime).LimitFirstN(1).String()
 }
 
