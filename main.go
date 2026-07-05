@@ -41,7 +41,7 @@ func main() {
 		helpFlag        = flag.Bool("h", false, "display this help dialog")
 		filterFlag      = flag.String("f", "", "filter containers")
 		activeOnlyFlag  = flag.Bool("a", false, "show active containers only")
-		sortFieldFlag   = flag.String("s", "", "select container sort field")
+		sortFieldFlag   = flag.String("s", "", "select container sort field, e.g. id, name, cpu, mem, 'mem %', net, pids, io, state, uptime")
 		reverseSortFlag = flag.Bool("r", false, "reverse container sort order")
 		invertFlag      = flag.Bool("i", false, "invert default colors")
 		connectorFlag   = flag.String("connector", "docker", "container connector to use")
