@@ -96,9 +96,31 @@ func (c *Docker) ReadCPU(stats *api.Stats) {
 }
 
 func (c *Docker) ReadMem(stats *api.Stats) {
-	c.MemUsage = int64(stats.MemoryStats.Usage - stats.MemoryStats.Stats.Cache)
+	cached := memoryCache(stats)
+	usage := int64(stats.MemoryStats.Usage)
+	if cached > usage {
+		cached = usage
+	}
+
+	c.MemUsage = usage - cached
 	c.MemLimit = int64(stats.MemoryStats.Limit)
 	c.MemPercent = percent(float64(c.MemUsage), float64(c.MemLimit))
+}
+
+func memoryCache(stats *api.Stats) int64 {
+	if stats == nil {
+		return 0
+	}
+
+	memStats := stats.MemoryStats.Stats
+	switch {
+	case memStats.TotalInactiveFile > 0:
+		return int64(memStats.TotalInactiveFile)
+	case memStats.InactiveFile > 0:
+		return int64(memStats.InactiveFile)
+	default:
+		return int64(memStats.Cache)
+	}
 }
 
 func (c *Docker) ReadNet(stats *api.Stats) {
