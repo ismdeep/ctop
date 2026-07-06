@@ -34,7 +34,7 @@ func (w *Env) Set(allEnvs string) {
 			key := match[1]
 			value := match[2]
 			w.data[key] = value
-			w.Rows = append(w.Rows, mkInfoRows(key, value)...)
+			w.Rows = append(w.Rows, mkInfoRows(key, value, w.Width)...)
 		}
 	}
 

@@ -30,7 +30,7 @@ func (w *Info) Set(k, v string) {
 	w.Rows = [][]string{}
 	for _, k := range displayInfo {
 		if v, ok := w.data[k]; ok {
-			w.Rows = append(w.Rows, mkInfoRows(k, v)...)
+			w.Rows = append(w.Rows, mkInfoRows(k, v, w.Width)...)
 		}
 	}
 
@@ -38,20 +38,79 @@ func (w *Info) Set(k, v string) {
 }
 
 // Build row(s) from a key and value string
-func mkInfoRows(k, v string) (rows [][]string) {
+func mkInfoRows(k, v string, tableWidth int) (rows [][]string) {
 	lines := strings.Split(v, "\n")
-
-	// initial row with field name
-	rows = append(rows, []string{k, lines[0]})
+	keyWidth, valueWidth := infoColumnWidths(tableWidth)
+	keyLines := wrapText(k, keyWidth)
+	valueLines := wrapText(lines[0], valueWidth)
+	rows = append(rows, zipRows(keyLines, valueLines)...)
 
 	// append any additional lines in separate row
 	if len(lines) > 1 {
 		for _, line := range lines[1:] {
 			if line != "" {
-				rows = append(rows, []string{"", line})
+				rows = append(rows, zipRows([]string{""}, wrapText(line, valueWidth))...)
 			}
 		}
 	}
 
+	return rows
+}
+
+func infoColumnWidths(tableWidth int) (int, int) {
+	const tablePadding = 8
+	const minKeyWidth = 8
+	const maxKeyWidth = 24
+
+	contentWidth := tableWidth - tablePadding
+	if contentWidth < 2 {
+		return 1, 1
+	}
+
+	keyWidth := contentWidth / 3
+	if contentWidth >= minKeyWidth+4 && keyWidth < minKeyWidth {
+		keyWidth = minKeyWidth
+	}
+	if keyWidth > maxKeyWidth {
+		keyWidth = maxKeyWidth
+	}
+	minValueWidth := contentWidth / 2
+	if minValueWidth < 1 {
+		minValueWidth = 1
+	}
+	if keyWidth > contentWidth-minValueWidth {
+		keyWidth = contentWidth - minValueWidth
+	}
+	if keyWidth < 1 {
+		keyWidth = 1
+	}
+
+	valueWidth := contentWidth - keyWidth
+	if valueWidth < 1 {
+		valueWidth = 1
+	}
+	return keyWidth, valueWidth
+}
+
+func zipRows(left, right []string) (rows [][]string) {
+	rowCount := len(left)
+	if len(right) > rowCount {
+		rowCount = len(right)
+	}
+	if rowCount == 0 {
+		return nil
+	}
+
+	for i := 0; i < rowCount; i++ {
+		l := ""
+		r := ""
+		if i < len(left) {
+			l = left[i]
+		}
+		if i < len(right) {
+			r = right[i]
+		}
+		rows = append(rows, []string{l, r})
+	}
 	return rows
 }
